@@ -18,11 +18,11 @@ const fixPrice = (data) => {
 
 
 const regexList = {
-    sku: /"sku":"[0-9]+"/,
+    sku: /"sku":"\d+"/,
     prices: {
         normal: /\szł\s-\scena\sregularna$/,
         omnibus: /^Najniższa\scena\sz\s30\sdni\sprzed\sobniżką:\s/,
-        hotshot: /\szłOszczędź\s.+\szł$/,
+        hotshot: /\szłOszczędź\s.+\szł$/
     },
 };
 
