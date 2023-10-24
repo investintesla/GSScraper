@@ -32,7 +32,7 @@ const interval = process.env.INTERVAL;
 let browser;
 
 // Inicjowanie Puppeteer (automatyzacja przeglądarek)
-const initializeBrowser = async () => {
+async function initializeBrowser() {
     try {
         browser = await puppeteer.launch({headless: "new"});
         logger.info('Puppeteer zainicjowany.');
@@ -103,22 +103,35 @@ const fetchHotshotData = async () => {
                 return false;
             }
         });
-
-        await uploadNewHotShot(hotshotObject);
     } catch (e) {
         logger.error('Wystąpił błąd podczas pobierania danych gorącego strzału:', e);
     }
 };
 
-// Rozpocznij wykonywanie funkcji
-setInterval(fetchHotshotData, interval * 1000);
 
 // Zaktualizuj wywołanie initializeBrowser w funkcji uruchamianej po starcie serwera
 app.listen(port, async () => {
     try {
-        await initializeBrowser();
         logger.info(`Aplikacja jest uruchomiona na porcie: ${port}`);
     } catch (e) {
         logger.error('Wystąpił błąd podczas inicjalizacji serwera:', e);
     }
 });
+
+app.get('/api/update', async (req, res) => {
+    // Send a JSON response with the hotshotObject
+    await initializeBrowser();
+    await uploadNewHotShot(hotshotObject);
+
+    res.json(hotshotObject);
+});
+
+app.get('/api/test', async (req, res) => {
+    // Send a JSON response with the hotshotObject
+    await initializeBrowser();
+
+    res.json(hotshotObject);
+});
+
+
+module.exports = app;
