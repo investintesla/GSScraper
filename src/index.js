@@ -8,7 +8,7 @@ const express = require('express'); // Framework aplikacji webowych
 
 // Customowe moduły
 const {uploadNewHotShot} = require('./database');
-const {logger, fixPrice, regexList, getCurrentDate} = require('./utils.js');
+const {logger, fixPrice, regexList} = require('./utils.js');
 
 const app = express();
 
@@ -26,6 +26,7 @@ const hotshotObject = {
 
 // Pobieranie wartości z .env i przechowywanie ich w zmiennych
 const port = process.env.PORT; // Port serwera
+const interval = process.env.INTERVAL;
 
 // Zmienna pod Puppeteer (do kontroli przeglądarki)
 let browser;
@@ -40,7 +41,6 @@ const initializeBrowser = async () => {
         logger.error('Wystąpił błąd podczas inicjalizacji przeglądarki:', e);
     }
 }
-
 
 // Scrapowanie strony z produktem
 async function updateHotShot() {
@@ -110,9 +110,8 @@ const fetchHotshotData = async () => {
     }
 };
 
-// Rozpocznij wykonywanie funkcji co 15 minut (900 000 milisekund)
-const interval = 10 * 1000; // 15 minut w milisekundach
-setInterval(fetchHotshotData, interval);
+// Rozpocznij wykonywanie funkcji
+setInterval(fetchHotshotData, interval * 1000);
 
 // Zaktualizuj wywołanie initializeBrowser w funkcji uruchamianej po starcie serwera
 app.listen(port, async () => {
