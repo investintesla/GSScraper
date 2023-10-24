@@ -1,0 +1,22 @@
+{
+  "name": "gsscrap",
+  "version": "23.2310.1",
+  "description": "Prosty backend do pobierania gorącego strzału (x-kom.pl)",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "nodemon src/index.js"
+  },
+  "author": "palecrack2137",
+  "license": "gpl-3.0",
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.12",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "mysql2": "^3.6.2",
+    "puppeteer": "^21.4.0",
+    "winston": "^3.11.0"
+  }
+}
