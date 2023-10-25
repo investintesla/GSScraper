@@ -2,9 +2,12 @@
 require('dotenv').config();
 
 // Wymagane biblioteki
-const puppeteer = require('puppeteer'); // Automatyzacja przeglądarek
+const puppeteer = require('puppeteer-extra'); // Automatyzacja przeglądarek
 const cheerio = require('cheerio'); // Biblioteka do parsowania HTML
 const express = require('express'); // Framework aplikacji webowych
+
+const StealthPlugin = require('puppeteer-extra-plugin-stealth')
+puppeteer.use(StealthPlugin())
 
 // Customowe moduły
 const {uploadNewHotShot} = require('./database');
@@ -34,7 +37,7 @@ let browser;
 // Inicjowanie Puppeteer (automatyzacja przeglądarek)
 async function initializeBrowser() {
     try {
-        browser = await puppeteer.launch({headless: "false"});
+        browser = await puppeteer.launch({headless: "new"});
         logger.info('Puppeteer zainicjowany.');
         await fetchHotshotData();
     } catch (e) {
