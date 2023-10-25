@@ -37,7 +37,7 @@ let browser;
 // Inicjowanie Puppeteer (automatyzacja przeglądarek)
 async function initializeBrowser() {
     try {
-        browser = await puppeteer.launch({headless: true});
+        browser = await puppeteer.launch({headless: false});
         logger.info('Puppeteer zainicjowany.');
         await fetchHotshotData();
     } catch (e) {
