@@ -75,7 +75,7 @@ const fetchHotshotData = async () => {
         // Wczytanie HTML strony do zmiennej
         const html = await updateHotShot();
         const $ = cheerio.load(html); // Załaduj HTML do parsera Cheerio
-        // logger.debug(html);
+        logger.debug(html);
 
         // Wyciągniecie nazwy produktu na stronie
         hotshotObject.name = $('h1[data-name="productTitle"]').text();
