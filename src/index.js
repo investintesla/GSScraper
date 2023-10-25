@@ -37,7 +37,7 @@ let browser;
 // Inicjowanie Puppeteer (automatyzacja przeglądarek)
 async function initializeBrowser() {
     try {
-        browser = await puppeteer.launch({headless: false});
+        browser = await puppeteer.launch();
         logger.info('Puppeteer zainicjowany.');
         await fetchHotshotData();
     } catch (e) {
@@ -50,6 +50,10 @@ async function updateHotShot() {
     const page = await browser.newPage();
     logger.debug('Otworzono nową stronę.');
     try {
+        await page.setViewport({ width: 1280, height: 720 });
+        await page.setUserAgent(
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36');
+
         await page.goto('https://www.x-kom.pl/goracy_strzal', {timeout: 30000});
         await page.waitForSelector('h2', {timeout: 10000});
         logger.debug("Strona została wczytana do pamięci.")
