@@ -50,6 +50,7 @@ async function updateHotShot() {
         await page.goto('https://www.x-kom.pl/goracy_strzal', {timeout: 30000});
         await page.waitForSelector('h2', {timeout: 10000});
         logger.debug("Strona została wczytana do pamięci.")
+        logger.info(page.content());
         return await page.content();
     } catch (e) {
         if (e.name === 'TimeoutError') {
