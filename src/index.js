@@ -50,7 +50,6 @@ async function updateHotShot() {
         await page.goto('https://www.x-kom.pl/goracy_strzal', {timeout: 30000});
         await page.waitForSelector('h2', {timeout: 10000});
         logger.debug("Strona została wczytana do pamięci.")
-        logger.info(page.content());
         return await page.content();
     } catch (e) {
         if (e.name === 'TimeoutError') {
@@ -73,6 +72,7 @@ const fetchHotshotData = async () => {
         // Wczytanie HTML strony do zmiennej
         const html = await updateHotShot();
         const $ = cheerio.load(html); // Załaduj HTML do parsera Cheerio
+        logger.debug(html);
 
         // Wyciągniecie nazwy produktu na stronie
         hotshotObject.name = $('h1[data-name="productTitle"]').text();
