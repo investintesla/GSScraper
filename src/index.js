@@ -34,7 +34,7 @@ let browser;
 // Inicjowanie Puppeteer (automatyzacja przeglądarek)
 async function initializeBrowser() {
     try {
-        browser = await puppeteer.launch({headless: "new"});
+        browser = await puppeteer.launch({headless: "false"});
         logger.info('Puppeteer zainicjowany.');
         await fetchHotshotData();
     } catch (e) {
@@ -72,7 +72,7 @@ const fetchHotshotData = async () => {
         // Wczytanie HTML strony do zmiennej
         const html = await updateHotShot();
         const $ = cheerio.load(html); // Załaduj HTML do parsera Cheerio
-        logger.debug(html);
+        // logger.debug(html);
 
         // Wyciągniecie nazwy produktu na stronie
         hotshotObject.name = $('h1[data-name="productTitle"]').text();
