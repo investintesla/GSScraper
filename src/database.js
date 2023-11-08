@@ -1,62 +1,85 @@
-const mysql2 = require('mysql2');
-const {dbConfig} = require('./config.js');
-const {logger} = require('./utils.js');
+const mysql2 = require('mysql2/promise'); // Use the promise-based version
+const { dbConfig } = require('./config.js');
+const { logger } = require('./utils.js');
 
-// Inicjalizacja połączenia z bazą danych
-const initializeDatabase = () => {
-    const dbConnection = mysql2.createConnection(dbConfig);
-    dbConnection.connect((err) => {
-        if (err) {
-            logger.error('Wystąpił problem podczas łączenia z bazą danych:', err);
-            throw err;
+const pool = mysql2.createPool({ ...dbConfig, waitForConnections: true });
+
+const SQL_INSERT_STATEMENT = `
+    IF NOT EXISTS ( SELECT 1 FROM hotshot_table WHERE sku = ? AND promotionStart = ? ) THEN
+    INSERT INTO hotshot_table (sku, price, oldPrice, minPrice, amount, itemName, thumbnailUrl, promotionStart, promotionEnd) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?); end if`;
+
+// Function to insert a new hotshot into the database
+const insertHotShot = async (hotshotObject) => {
+    try {
+        if (hotshotObject.sku === 0) {
+            logger.error('Gorący strzał nie został dodany do bazy danych, SKU produktu == 0.');
+            return;
         }
-        logger.info('Połączono z bazą danych.');
-    });
-    return dbConnection;
+
+        const connection = await pool.getConnection();
+
+        const price = hotshotObject.prices.price;
+        const oldPrice = hotshotObject.prices.oldPrice;
+        const minPrice = hotshotObject.prices.minPrice;
+
+        const sku = hotshotObject.sku;
+        const amount = hotshotObject.amount;
+        const itemName = hotshotObject.itemName;
+        const thumbnailUrl = hotshotObject.thumbnailUrl;
+
+        const promotionStart = hotshotObject.promotionStart;
+        const promotionEnd = hotshotObject.promotionEnd;
+
+        const values = [sku, promotionStart, sku, price, oldPrice, minPrice, amount, itemName, thumbnailUrl, promotionStart, promotionEnd];
+
+        // Execute the SQL query with proper error handling
+        const [results] = await connection.query(SQL_INSERT_STATEMENT, values);
+
+        if (results.affectedRows === 0) {
+            logger.warn('Ten gorący strzał znajduje się już w bazie danych.');
+        } else {
+            logger.info('Gorący strzał został dodany do bazy danych.');
+        }
+
+        connection.release();
+    } catch (error) {
+        logger.error('An error occurred during database operation:', error);
+    }
 };
 
-const SQL_INSERT_STATEMENT = `IF NOT EXISTS ( SELECT 1 FROM hotshots WHERE name = ? AND sku = ? AND thumbnail_url = ? AND created_at >= NOW() - INTERVAL 12 HOUR ) THEN INSERT INTO hotshots (name, normal_price, omnibus_price, hotshot_price, sku, thumbnail_url) VALUES (?, ?, ?, ?, ?, ?); end if`;
+async function fetchPaginatedData(offset, itemsPerPage) {
+    try {
+        const sqlQuery = `SELECT * FROM hotshot_table ORDER BY promotionStart DESC LIMIT ? OFFSET ?;`;
 
-// Funkcja do przesyłania nowego gorącego strzału do bazy danych
-const uploadNewHotShot = async (hotshotObject) => {
+        const queryParams = [itemsPerPage, offset];
 
-    const dbConnection = await initializeDatabase();
+        const connection = await pool.getConnection();
+        const [results] = await connection.query(sqlQuery, queryParams);
 
-    const name = hotshotObject.name;
-    const normal_price = hotshotObject.prices.normal;
-    const hotshot_price = hotshotObject.prices.hotshot;
-    const omnibus_price = hotshotObject.prices.omnibus;
-    const sku = hotshotObject.sku;
-    const thumbnail_url = hotshotObject.thumbnail;
+        connection.release();
 
-    const values = [name, sku, thumbnail_url, name, normal_price, omnibus_price, hotshot_price, sku, thumbnail_url];
-
-    // Wykonaj zapytanie SQL w bazie danych
-    dbConnection.query(SQL_INSERT_STATEMENT, values, (err, results) => {
-        if (err) {
-            logger.error('Napotkano problem podczas przetwarzania zapytania:', err);
-            dbConnection.close();
-            logger.info("Połączenie z bazą danych zamknięte");
-            return;
-        } else {
-            logger.info("Zapytanie zostało prawidłowo wykonane!");
-        }
-
-        logger.debug(JSON.stringify(results));
-
-        // Sprawdź, czy dodawanie do bazy danych się powiodło
-        if (results["affectedRows"] === 0) {
-            logger.warn("Ten gorący strzał znajduje się już w bazie danych.");
-        } else {
-            logger.info("Gorący strzał został dodany do bazy danych!");
-        }
-
-        dbConnection.close();
-        logger.info("Połączenie z bazą danych zamknięte");
-    });
+        return results;
+    } catch (error) {
+        logger.error('An error occurred during database operation:', error);
+        throw error;
+    }
 }
 
+async function getTotalItemCount() {
+    try {
+        const sqlQuery = 'SELECT COUNT(*) AS total_count FROM hotshot_table;';
+        const connection = await pool.getConnection();
+        const [result] = await connection.query(sqlQuery);
+        connection.release();
+
+        return result[0].total_count;
+    } catch (error) {
+        logger.error('An error occurred during database operation:', error);
+        throw error;
+    }
+}
 module.exports = {
-    initializeDatabase,
-    uploadNewHotShot
+    insertHotShot,
+    fetchPaginatedData,
+    getTotalItemCount
 };
